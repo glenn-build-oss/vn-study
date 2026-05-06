@@ -354,12 +354,29 @@ class ChicaApp {
         this.voices = this.speechSynthesis.getVoices();
         this.voiceSelect.innerHTML = '<option value="">Default Voice</option>';
         
+        // Sort voices by language and name
+        this.voices.sort((a, b) => {
+            const langCompare = a.lang.localeCompare(b.lang);
+            if (langCompare !== 0) return langCompare;
+            return a.name.localeCompare(b.name);
+        });
+        
         this.voices.forEach((voice, index) => {
             const option = document.createElement('option');
             option.value = index;
             option.textContent = `${voice.name} (${voice.lang})`;
             this.voiceSelect.appendChild(option);
         });
+        
+        // Set default voice if available
+        if (this.voices.length > 0) {
+            // Try to find English voice first
+            const englishVoice = this.voices.find(voice => voice.lang.startsWith('en'));
+            if (englishVoice) {
+                const index = this.voices.indexOf(englishVoice);
+                this.voiceSelect.value = index;
+            }
+        }
     }
 
     updateButtonStates() {
@@ -394,14 +411,24 @@ class ChicaApp {
 
     async playSingleUtterance(text) {
         return new Promise((resolve, reject) => {
+            // Check if speech synthesis is available
+            if (!this.speechSynthesis) {
+                reject(new Error('Speech synthesis not supported in this browser'));
+                return;
+            }
+            
+            // Cancel any ongoing speech
+            this.speechSynthesis.cancel();
+            
             this.currentUtterance = new SpeechSynthesisUtterance(text);
             
             // Apply voice settings
-            if (this.voiceSelect.value) {
+            if (this.voiceSelect.value && this.voices[this.voiceSelect.value]) {
                 this.currentUtterance.voice = this.voices[this.voiceSelect.value];
             }
             this.currentUtterance.rate = parseFloat(this.speedSlider.value);
             this.currentUtterance.pitch = parseFloat(this.pitchSlider.value);
+            this.currentUtterance.volume = 1.0;
             
             // Set up event handlers
             this.currentUtterance.onstart = () => {
@@ -412,16 +439,21 @@ class ChicaApp {
             
             this.currentUtterance.onend = () => {
                 this.isPaused = false;
+                this.currentUtterance = null;
                 this.updatePlaybackButtons();
                 resolve();
             };
             
             this.currentUtterance.onerror = (event) => {
+                this.currentUtterance = null;
+                this.updatePlaybackButtons();
                 reject(new Error('Speech synthesis error: ' + event.error));
             };
             
-            // Start speaking
-            this.speechSynthesis.speak(this.currentUtterance);
+            // Start speaking with a small delay to ensure proper initialization
+            setTimeout(() => {
+                this.speechSynthesis.speak(this.currentUtterance);
+            }, 100);
         });
     }
 
@@ -518,22 +550,29 @@ class ChicaApp {
     }
 
     loadSettings() {
-        // Load settings from localStorage
-        const savedSettings = localStorage.getItem('chicaSettings');
-        
-        if (savedSettings) {
-            try {
+        // Load settings from localStorage with error handling
+        try {
+            const savedSettings = localStorage.getItem('chicaSettings');
+            
+            if (savedSettings) {
                 const settings = JSON.parse(savedSettings);
                 this.maxFileSize = settings.maxFileSize || 50 * 1024 * 1024;
                 this.maxChunkSize = settings.maxChunkSize || 30000;
-            } catch (error) {
-                console.error('Error loading settings:', error);
             }
+        } catch (error) {
+            console.warn('Could not load settings from localStorage:', error);
+            // Use defaults if localStorage is blocked
+            this.maxFileSize = 50 * 1024 * 1024;
+            this.maxChunkSize = 30000;
         }
         
         // Update UI with loaded settings
-        this.maxFileSizeInput.value = Math.round(this.maxFileSize / (1024 * 1024));
-        this.chunkSizeInput.value = this.maxChunkSize;
+        if (this.maxFileSizeInput) {
+            this.maxFileSizeInput.value = Math.round(this.maxFileSize / (1024 * 1024));
+        }
+        if (this.chunkSizeInput) {
+            this.chunkSizeInput.value = this.maxChunkSize;
+        }
         this.updateLimitsDisplay();
     }
 
@@ -557,13 +596,18 @@ class ChicaApp {
         this.maxFileSize = maxFileSizeMB * 1024 * 1024;
         this.maxChunkSize = chunkSize;
         
-        // Save to localStorage
+        // Save to localStorage with error handling
         const settings = {
             maxFileSize: this.maxFileSize,
             maxChunkSize: this.maxChunkSize
         };
         
-        localStorage.setItem('chicaSettings', JSON.stringify(settings));
+        try {
+            localStorage.setItem('chicaSettings', JSON.stringify(settings));
+        } catch (error) {
+            console.warn('Could not save settings to localStorage:', error);
+            // Continue even if localStorage fails
+        }
         
         // Update display
         this.updateLimitsDisplay();
@@ -918,7 +962,10 @@ class ChicaApp {
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new ChicaApp();
+    // Small delay to ensure all resources are loaded
+    setTimeout(() => {
+        new ChicaApp();
+    }, 100);
 });
 
 // Add PDF.js library for PDF processing
