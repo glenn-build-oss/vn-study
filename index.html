@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chica - Text to Speech Converter</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
+    <header class="bg-white shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4 sm:py-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-microphone-alt text-purple-600 text-2xl sm:text-3xl"></i>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Chica</h1>
+                </div>
+                <p class="text-gray-600 text-sm sm:text-base text-center sm:text-right">Transform your text into audio</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Input Section -->
+            <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8">
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
+                    <i class="fas fa-keyboard text-purple-600 mr-2"></i>
+                    Input Your Text
+                </h2>
+                
+                <!-- Tab Navigation -->
+                <div class="flex border-b border-gray-200 mb-4 sm:mb-6 overflow-x-auto">
+                    <button id="textTab" class="px-3 sm:px-4 py-2 text-purple-600 border-b-2 border-purple-600 font-medium whitespace-nowrap">
+                        <i class="fas fa-keyboard mr-1 sm:mr-2 text-sm sm:text-base"></i>
+                        <span class="text-sm sm:text-base">Text Input</span>
+                    </button>
+                    <button id="fileTab" class="px-3 sm:px-4 py-2 text-gray-600 hover:text-purple-600 font-medium whitespace-nowrap">
+                        <i class="fas fa-file-upload mr-1 sm:mr-2 text-sm sm:text-base"></i>
+                        <span class="text-sm sm:text-base">Upload File</span>
+                    </button>
+                </div>
+
+                <!-- Text Input Panel -->
+                <div id="textPanel" class="space-y-4">
+                    <textarea 
+                        id="textInput" 
+                        placeholder="Paste your text here or start typing..."
+                        class="w-full h-48 sm:h-64 p-3 sm:p-4 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none resize-none"
+                    ></textarea>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                        <span id="charCount" class="text-xs sm:text-sm text-gray-500">0 characters</span>
+                        <button id="clearText" class="text-red-500 hover:text-red-700 text-sm sm:text-base py-1 px-2 sm:px-0">
+                            <i class="fas fa-trash mr-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Upload Panel -->
+                <div id="filePanel" class="hidden space-y-4">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center hover:border-purple-500 transition-colors">
+                        <i class="fas fa-cloud-upload-alt text-3xl sm:text-4xl text-gray-400 mb-3 sm:mb-4"></i>
+                        <p class="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">Drag and drop your file here or click to browse</p>
+                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" class="hidden">
+                        <button id="browseBtn" class="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-700 text-sm sm:text-base">
+                            <i class="fas fa-folder-open mr-1 sm:mr-2"></i>Browse Files
+                        </button>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-2">Supported: PDF, Word, Text</p>
+                    </div>
+                    <div id="fileInfo" class="hidden bg-purple-50 p-3 sm:p-4 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0">
+                                <i class="fas fa-file text-purple-600 mr-2 text-sm sm:text-base flex-shrink-0"></i>
+                                <span id="fileName" class="font-medium text-sm sm:text-base truncate"></span>
+                            </div>
+                            <button id="removeFile" class="text-red-500 hover:text-red-700 ml-2 flex-shrink-0">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voice Settings -->
+            <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8">
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
+                    <i class="fas fa-sliders-h text-purple-600 mr-2"></i>
+                    Voice Settings
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Voice</label>
+                        <select id="voiceSelect" class="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                            <option value="">Default Voice</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Speed</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="speedSlider" min="0.5" max="2" step="0.1" value="1" class="flex-1">
+                            <span id="speedValue" class="text-xs sm:text-sm font-medium w-10 sm:w-12">1.0x</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pitch</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1" class="flex-1">
+                            <span id="pitchValue" class="text-xs sm:text-sm font-medium w-10 sm:w-12">1.0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Processing Settings -->
+            <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8">
+                <div class="flex items-center justify-between mb-4 sm:mb-6">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">
+                        <i class="fas fa-cog text-purple-600 mr-2"></i>
+                        Processing Settings
+                    </h2>
+                    <button id="toggleSettings" class="text-purple-600 hover:text-purple-700 p-2">
+                        <i class="fas fa-chevron-down" id="settingsIcon"></i>
+                    </button>
+                </div>
+                
+                <div id="settingsContent" class="hidden space-y-4 sm:space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Max File Size (MB)
+                                <span class="text-xs text-gray-500 block">Default: 50MB</span>
+                            </label>
+                            <input type="number" id="maxFileSize" min="1" max="100" value="50" class="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Text Chunk Size
+                                <span class="text-xs text-gray-500 block">Default: 30,000 chars</span>
+                            </label>
+                            <input type="number" id="chunkSize" min="1000" max="100000" step="1000" value="30000" class="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                        <h3 class="font-medium text-blue-900 mb-2 text-sm sm:text-base">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Current Limits
+                        </h3>
+                        <ul class="text-xs sm:text-sm text-blue-800 space-y-1">
+                            <li>• File Size: <span id="currentFileSizeLimit">50MB</span></li>
+                            <li>• Text Chunk: <span id="currentChunkLimit">30,000</span> characters</li>
+                            <li>• Supported: PDF, Word, Text</li>
+                            <li>• Browser Memory: Device dependent</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button id="saveSettings" class="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-700 text-sm sm:text-base">
+                            <i class="fas fa-save mr-1 sm:mr-2"></i>Save Settings
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8">
+                <div class="grid grid-cols-2 sm:flex sm:flex-row gap-3 sm:gap-4 justify-center">
+                    <button id="playBtn" class="bg-green-600 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base">
+                        <i class="fas fa-play mr-1 sm:mr-2"></i>
+                        <span class="block sm:inline">Play</span>
+                    </button>
+                    <button id="pauseBtn" class="bg-yellow-600 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base">
+                        <i class="fas fa-pause mr-1 sm:mr-2"></i>
+                        <span class="block sm:inline">Pause</span>
+                    </button>
+                    <button id="stopBtn" class="bg-red-600 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base">
+                        <i class="fas fa-stop mr-1 sm:mr-2"></i>
+                        <span class="block sm:inline">Stop</span>
+                    </button>
+                    <button id="downloadBtn" class="bg-purple-600 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base">
+                        <i class="fas fa-download mr-1 sm:mr-2"></i>
+                        <span class="block sm:inline">Download</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section id="progressSection" class="bg-white rounded-2xl shadow-xl p-4 sm:p-8 hidden">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Processing...</h3>
+                <div class="w-full bg-gray-200 rounded-full h-2 sm:h-3">
+                    <div id="progressBar" class="bg-purple-600 h-2 sm:h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="progressText" class="text-xs sm:text-sm text-gray-600 mt-2">Initializing...</p>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-4 sm:py-6 mt-8 sm:mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-xs sm:text-sm">&copy; 2024 Chica. Transform your study notes into audio.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

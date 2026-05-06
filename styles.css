@@ -1,0 +1,338 @@
+/* Custom animations and styles */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Custom scrollbar */
+textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #9333ea;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #7c3aed;
+}
+
+/* Button hover effects */
+.btn-hover {
+    transition: all 0.3s ease;
+}
+
+.btn-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* File upload area */
+.upload-area {
+    transition: all 0.3s ease;
+}
+
+.upload-area.dragover {
+    background-color: #f3e8ff;
+    border-color: #9333ea;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #9333ea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Voice selection dropdown */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+/* Range slider styling */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-track {
+    background: #e5e7eb;
+    height: 6px;
+    border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #9333ea;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    margin-top: -7px;
+    cursor: grab;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: #7c3aed;
+    cursor: grabbing;
+}
+
+input[type="range"]::-moz-range-track {
+    background: #e5e7eb;
+    height: 6px;
+    border-radius: 3px;
+}
+
+input[type="range"]::-moz-range-thumb {
+    background: #9333ea;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    border: none;
+    cursor: grab;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    background: #7c3aed;
+    cursor: grabbing;
+}
+
+/* Tab transitions */
+.tab-content {
+    transition: all 0.3s ease;
+}
+
+/* Progress bar animation */
+.progress-bar-animated {
+    background: linear-gradient(90deg, #9333ea 0%, #7c3aed 50%, #9333ea 100%);
+    background-size: 200% 100%;
+    animation: progressAnimation 2s linear infinite;
+}
+
+@keyframes progressAnimation {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .flex-col.sm\\:flex-row {
+        flex-direction: column;
+    }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 640px) {
+    /* Touch-friendly tap targets */
+    button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Better mobile spacing */
+    .space-y-4 > * + * {
+        margin-top: 1rem;
+    }
+    
+    /* Mobile text areas */
+    textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+        line-height: 1.5;
+    }
+    
+    /* Mobile file upload */
+    .border-dashed {
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    /* Mobile progress bar */
+    .h-2 {
+        height: 8px;
+    }
+    
+    /* Mobile modal optimizations */
+    .fixed.inset-0 {
+        padding: 1rem;
+    }
+    
+    .max-w-4xl {
+        max-width: 95vw;
+        max-height: 90vh;
+    }
+    
+    /* Mobile range sliders */
+    input[type="range"] {
+        height: 40px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+    }
+    
+    input[type="range"]::-webkit-slider-track {
+        background: #e5e7eb;
+        height: 8px;
+        border-radius: 4px;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: #9333ea;
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        margin-top: -8px;
+        cursor: grab;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    input[type="range"]::-webkit-slider-thumb:hover {
+        background: #7c3aed;
+        cursor: grabbing;
+    }
+    
+    /* Mobile select dropdowns */
+    select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px;
+        min-height: 44px;
+    }
+    
+    /* Mobile inputs */
+    input[type="number"] {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px;
+        min-height: 44px;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+/* Large mobile optimizations */
+@media (max-width: 480px) {
+    /* Compact button text */
+    .grid-cols-2 button span {
+        font-size: 12px;
+    }
+    
+    /* Smaller icons on mobile */
+    .text-3xl {
+        font-size: 1.5rem;
+    }
+    
+    /* More compact spacing */
+    .mb-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .mb-8 {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Mobile file info */
+    .truncate {
+        max-width: 200px;
+    }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    /* Reduce vertical spacing in landscape */
+    .py-8 {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    
+    /* Compact header in landscape */
+    header .py-6 {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    /* Smaller text area in landscape */
+    textarea {
+        min-height: 120px;
+    }
+}
+
+/* Focus states */
+.focus-ring:focus {
+    outline: 2px solid #9333ea;
+    outline-offset: 2px;
+}
+
+/* Disabled state */
+.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Success message */
+.success-message {
+    background-color: #10b981;
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Error message */
+.error-message {
+    background-color: #ef4444;
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
