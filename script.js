@@ -15,7 +15,7 @@ class ChicaApp {
         this.currentText = '';
         this.isInitialized = false;
         
-        console.log('ChicaApp: Initializing...');
+        console.log("Chica's Personal Study Aid: Initializing...");
         
         this.initializeElements();
         this.initializeEventListeners();
