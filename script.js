@@ -549,14 +549,14 @@ class ChicaApp {
     findReliableVoice() {
         // Try to find a reliable voice in order of preference
         const preferences = [
-            // 1. British English female voices (highest priority)
-            (voice) => voice.lang === 'en-GB' && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
-            // 2. Any British English voice
-            (voice) => voice.lang === 'en-GB',
+            // 1. British English female voices (avoid Online/Natural - they cause synthesis-failed)
+            (voice) => voice.lang === 'en-GB' && !voice.name.includes('Online') && !voice.name.includes('Natural') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
+            // 2. Any British English voice (avoid Online/Natural)
+            (voice) => voice.lang === 'en-GB' && !voice.name.includes('Online') && !voice.name.includes('Natural'),
             // 3. English female voices (avoid online/natural)
             (voice) => !voice.name.includes('Online') && !voice.name.includes('Natural') && voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
-            // 4. Any female English voice
-            (voice) => voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
+            // 4. Any female English voice (avoid online/natural)
+            (voice) => !voice.name.includes('Online') && !voice.name.includes('Natural') && voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
             // 5. Any English voice (avoid online/natural)
             (voice) => !voice.name.includes('Online') && !voice.name.includes('Natural') && voice.lang.startsWith('en'),
             // 6. Any English voice
@@ -585,27 +585,37 @@ class ChicaApp {
         
         switch (retryCount) {
             case 1:
-                // Try a different British English female voice
+                // Try a different British English female voice (avoid Online/Natural)
                 fallbackVoice = this.voices.find(voice => 
                     voice.lang === 'en-GB' && 
+                    !voice.name.includes('Online') && 
+                    !voice.name.includes('Natural') &&
                     (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')) &&
                     voice.name !== this.voiceSelect.options[this.voiceSelect.value]?.text
                 );
                 if (!fallbackVoice) {
-                    // Try any British English voice
+                    // Try any British English voice (avoid Online/Natural)
                     fallbackVoice = this.voices.find(voice => 
                         voice.lang === 'en-GB' &&
+                        !voice.name.includes('Online') && 
+                        !voice.name.includes('Natural') &&
                         voice.name !== this.voiceSelect.options[this.voiceSelect.value]?.text
                     );
                 }
                 break;
             case 2:
-                // Try the first available British English voice
-                fallbackVoice = this.voices.find(voice => voice.lang === 'en-GB');
+                // Try the first available British English voice (avoid Online/Natural)
+                fallbackVoice = this.voices.find(voice => 
+                    voice.lang === 'en-GB' && 
+                    !voice.name.includes('Online') && 
+                    !voice.name.includes('Natural')
+                );
                 if (!fallbackVoice) {
-                    // Try any English female voice
+                    // Try any English female voice (avoid Online/Natural)
                     fallbackVoice = this.voices.find(voice => 
                         voice.lang.startsWith('en') &&
+                        !voice.name.includes('Online') && 
+                        !voice.name.includes('Natural') &&
                         (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl'))
                     );
                 }
