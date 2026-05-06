@@ -1,5 +1,11 @@
 class ChicaApp {
     constructor() {
+        // Check for speech synthesis support
+        if (!('speechSynthesis' in window)) {
+            this.showMessage('Speech synthesis is not supported in your browser. Please try Chrome, Safari, or Edge.', 'error');
+            return;
+        }
+        
         this.speechSynthesis = window.speechSynthesis;
         this.currentUtterance = null;
         this.voices = [];
@@ -7,10 +13,15 @@ class ChicaApp {
         this.audioChunks = [];
         this.mediaRecorder = null;
         this.currentText = '';
+        this.isInitialized = false;
+        
+        console.log('ChicaApp: Initializing...');
         
         this.initializeElements();
         this.initializeEventListeners();
-        this.loadVoices();
+        
+        // Load voices with retry mechanism
+        this.loadVoicesWithRetry();
     }
 
     initializeElements() {
@@ -350,8 +361,38 @@ class ChicaApp {
         });
     }
 
+    loadVoicesWithRetry() {
+        console.log('Loading voices...');
+        
+        // First attempt
+        this.loadVoices();
+        
+        // Retry mechanism for voices loading
+        if (this.voices.length === 0) {
+            setTimeout(() => {
+                console.log('Retrying voice loading...');
+                this.loadVoices();
+                
+                if (this.voices.length > 0) {
+                    console.log('Voices loaded successfully:', this.voices.length);
+                    this.isInitialized = true;
+                } else {
+                    console.warn('No voices available');
+                    this.showMessage('No speech voices available. Please check your browser settings.', 'error');
+                }
+            }, 1000);
+        } else {
+            console.log('Voices loaded on first attempt:', this.voices.length);
+            this.isInitialized = true;
+        }
+    }
+
     loadVoices() {
         this.voices = this.speechSynthesis.getVoices();
+        console.log('Available voices:', this.voices.length);
+        
+        if (!this.voiceSelect) return;
+        
         this.voiceSelect.innerHTML = '<option value="">Default Voice</option>';
         
         // Sort voices by language and name
@@ -375,6 +416,7 @@ class ChicaApp {
             if (englishVoice) {
                 const index = this.voices.indexOf(englishVoice);
                 this.voiceSelect.value = index;
+                console.log('Selected English voice:', englishVoice.name);
             }
         }
     }
@@ -387,23 +429,39 @@ class ChicaApp {
 
     async playAudio() {
         const text = this.textInput.value.trim();
-        if (!text) return;
+        if (!text) {
+            this.showMessage('Please enter some text to convert to speech', 'error');
+            return;
+        }
+
+        console.log('Playing audio, text length:', text.length);
+        console.log('Speech synthesis available:', !!this.speechSynthesis);
+        console.log('Voices available:', this.voices.length);
+        console.log('Is initialized:', this.isInitialized);
 
         this.currentText = text;
         this.showProgress('Starting audio playback...');
 
         try {
+            // Check if speech synthesis is ready
+            if (!this.isInitialized) {
+                throw new Error('Speech synthesis not initialized yet. Please wait a moment and try again.');
+            }
+
             // Stop any current playback
             this.stopAudio();
 
             // Check if text needs chunking using configurable limit
             if (text.length > this.maxChunkSize) {
+                console.log('Using chunked audio for long text');
                 await this.playChunkedAudio(text, this.maxChunkSize);
             } else {
+                console.log('Using single utterance for short text');
                 await this.playSingleUtterance(text);
             }
             
         } catch (error) {
+            console.error('Audio playback error:', error);
             this.showMessage('Error playing audio: ' + error.message, 'error');
             this.hideProgress();
         }
@@ -411,6 +469,8 @@ class ChicaApp {
 
     async playSingleUtterance(text) {
         return new Promise((resolve, reject) => {
+            console.log('Creating utterance for text:', text.substring(0, 50) + '...');
+            
             // Check if speech synthesis is available
             if (!this.speechSynthesis) {
                 reject(new Error('Speech synthesis not supported in this browser'));
@@ -425,19 +485,27 @@ class ChicaApp {
             // Apply voice settings
             if (this.voiceSelect.value && this.voices[this.voiceSelect.value]) {
                 this.currentUtterance.voice = this.voices[this.voiceSelect.value];
+                console.log('Using voice:', this.voices[this.voiceSelect.value].name);
+            } else {
+                console.log('Using default voice');
             }
+            
             this.currentUtterance.rate = parseFloat(this.speedSlider.value);
             this.currentUtterance.pitch = parseFloat(this.pitchSlider.value);
             this.currentUtterance.volume = 1.0;
             
+            console.log('Utterance settings - rate:', this.currentUtterance.rate, 'pitch:', this.currentUtterance.pitch);
+            
             // Set up event handlers
             this.currentUtterance.onstart = () => {
+                console.log('Speech started');
                 this.isPaused = false;
                 this.updatePlaybackButtons();
                 this.hideProgress();
             };
             
             this.currentUtterance.onend = () => {
+                console.log('Speech ended');
                 this.isPaused = false;
                 this.currentUtterance = null;
                 this.updatePlaybackButtons();
@@ -445,15 +513,15 @@ class ChicaApp {
             };
             
             this.currentUtterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event.error);
                 this.currentUtterance = null;
                 this.updatePlaybackButtons();
                 reject(new Error('Speech synthesis error: ' + event.error));
             };
             
-            // Start speaking with a small delay to ensure proper initialization
-            setTimeout(() => {
-                this.speechSynthesis.speak(this.currentUtterance);
-            }, 100);
+            // Start speaking immediately
+            console.log('Calling speechSynthesis.speak()');
+            this.speechSynthesis.speak(this.currentUtterance);
         });
     }
 
