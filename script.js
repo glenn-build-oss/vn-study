@@ -549,15 +549,19 @@ class ChicaApp {
     findReliableVoice() {
         // Try to find a reliable voice in order of preference
         const preferences = [
-            // Prefer normal woman's voice (avoid robotic/natural/online labels)
-            (voice) => !voice.name.includes('Online') && !voice.name.includes('Natural') && !voice.name.includes('Robotic') && voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
-            // Prefer any female voice
-            (voice) => !voice.name.includes('Online') && voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female'),
-            // Prefer any English voice (avoid online/natural)
+            // 1. British English female voices (highest priority)
+            (voice) => voice.lang === 'en-GB' && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
+            // 2. Any British English voice
+            (voice) => voice.lang === 'en-GB',
+            // 3. English female voices (avoid online/natural)
+            (voice) => !voice.name.includes('Online') && !voice.name.includes('Natural') && voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
+            // 4. Any female English voice
+            (voice) => voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')),
+            // 5. Any English voice (avoid online/natural)
             (voice) => !voice.name.includes('Online') && !voice.name.includes('Natural') && voice.lang.startsWith('en'),
-            // Fallback to any English voice
+            // 6. Any English voice
             (voice) => voice.lang.startsWith('en'),
-            // Fallback to any voice
+            // 7. Fallback to any voice
             () => true
         ];
         
@@ -581,34 +585,29 @@ class ChicaApp {
         
         switch (retryCount) {
             case 1:
-                // Try a different normal woman's voice
+                // Try a different British English female voice
                 fallbackVoice = this.voices.find(voice => 
-                    !voice.name.includes('Online') && 
-                    !voice.name.includes('Natural') &&
-                    voice.lang.startsWith('en') &&
-                    (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman')) &&
+                    voice.lang === 'en-GB' && 
+                    (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl')) &&
                     voice.name !== this.voiceSelect.options[this.voiceSelect.value]?.text
                 );
                 if (!fallbackVoice) {
-                    // Try any female voice
+                    // Try any British English voice
                     fallbackVoice = this.voices.find(voice => 
-                        !voice.name.includes('Online') &&
-                        voice.lang.startsWith('en') &&
-                        voice.name.toLowerCase().includes('female') &&
+                        voice.lang === 'en-GB' &&
                         voice.name !== this.voiceSelect.options[this.voiceSelect.value]?.text
                     );
                 }
                 break;
             case 2:
-                // Try the first available English voice (avoid online/natural)
-                fallbackVoice = this.voices.find(voice => 
-                    !voice.name.includes('Online') && 
-                    !voice.name.includes('Natural') &&
-                    voice.lang.startsWith('en')
-                );
+                // Try the first available British English voice
+                fallbackVoice = this.voices.find(voice => voice.lang === 'en-GB');
                 if (!fallbackVoice) {
-                    // Try any English voice
-                    fallbackVoice = this.voices.find(voice => voice.lang.startsWith('en'));
+                    // Try any English female voice
+                    fallbackVoice = this.voices.find(voice => 
+                        voice.lang.startsWith('en') &&
+                        (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('girl'))
+                    );
                 }
                 break;
             case 3:
