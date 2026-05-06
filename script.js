@@ -467,9 +467,10 @@ class ChicaApp {
         }
     }
 
-    async playSingleUtterance(text) {
+    async playSingleUtterance(text, retryCount = 0) {
         return new Promise((resolve, reject) => {
             console.log('Creating utterance for text:', text.substring(0, 50) + '...');
+            console.log('Retry count:', retryCount);
             
             // Check if speech synthesis is available
             if (!this.speechSynthesis) {
@@ -482,12 +483,19 @@ class ChicaApp {
             
             this.currentUtterance = new SpeechSynthesisUtterance(text);
             
-            // Apply voice settings
+            // Apply voice settings with fallback logic
+            let selectedVoice = null;
             if (this.voiceSelect.value && this.voices[this.voiceSelect.value]) {
-                this.currentUtterance.voice = this.voices[this.voiceSelect.value];
-                console.log('Using voice:', this.voices[this.voiceSelect.value].name);
+                selectedVoice = this.voices[this.voiceSelect.value];
+                console.log('Attempting to use voice:', selectedVoice.name);
             } else {
-                console.log('Using default voice');
+                // Try to find a reliable default voice
+                selectedVoice = this.findReliableVoice();
+                console.log('Using fallback voice:', selectedVoice ? selectedVoice.name : 'system default');
+            }
+            
+            if (selectedVoice) {
+                this.currentUtterance.voice = selectedVoice;
             }
             
             this.currentUtterance.rate = parseFloat(this.speedSlider.value);
@@ -495,34 +503,112 @@ class ChicaApp {
             this.currentUtterance.volume = 1.0;
             
             console.log('Utterance settings - rate:', this.currentUtterance.rate, 'pitch:', this.currentUtterance.pitch);
+            console.log('Voice used:', this.currentUtterance.voice ? this.currentUtterance.voice.name : 'default');
             
             // Set up event handlers
             this.currentUtterance.onstart = () => {
-                console.log('Speech started');
+                console.log('Speech started successfully');
                 this.isPaused = false;
                 this.updatePlaybackButtons();
                 this.hideProgress();
             };
             
             this.currentUtterance.onend = () => {
-                console.log('Speech ended');
+                console.log('Speech ended successfully');
                 this.isPaused = false;
                 this.currentUtterance = null;
                 this.updatePlaybackButtons();
                 resolve();
             };
             
-            this.currentUtterance.onerror = (event) => {
+            this.currentUtterance.onerror = async (event) => {
                 console.error('Speech synthesis error:', event.error);
                 this.currentUtterance = null;
                 this.updatePlaybackButtons();
-                reject(new Error('Speech synthesis error: ' + event.error));
+                
+                // Retry logic for synthesis-failed errors
+                if (event.error === 'synthesis-failed' && retryCount < 3) {
+                    console.log('Retrying with different voice...');
+                    try {
+                        await this.retryWithDifferentVoice(text, retryCount + 1);
+                        resolve();
+                    } catch (retryError) {
+                        reject(retryError);
+                    }
+                } else {
+                    reject(new Error('Speech synthesis error: ' + event.error));
+                }
             };
             
             // Start speaking immediately
             console.log('Calling speechSynthesis.speak()');
             this.speechSynthesis.speak(this.currentUtterance);
         });
+    }
+
+    findReliableVoice() {
+        // Try to find a reliable voice in order of preference
+        const preferences = [
+            // Prefer local voices over online services
+            (voice) => !voice.name.includes('Online') && voice.lang.startsWith('en'),
+            // Fallback to any English voice
+            (voice) => voice.lang.startsWith('en'),
+            // Fallback to any voice
+            () => true
+        ];
+        
+        for (const preference of preferences) {
+            const voice = this.voices.find(preference);
+            if (voice) {
+                console.log('Found reliable voice:', voice.name);
+                return voice;
+            }
+        }
+        
+        return null;
+    }
+
+    async retryWithDifferentVoice(text, retryCount) {
+        console.log('Retrying with different voice, attempt:', retryCount);
+        
+        // Try different voice selection strategies
+        let fallbackVoice = null;
+        
+        switch (retryCount) {
+            case 1:
+                // Try a different English voice
+                fallbackVoice = this.voices.find(voice => 
+                    voice.lang.startsWith('en') && 
+                    voice.name !== this.voiceSelect.options[this.voiceSelect.value]?.text
+                );
+                break;
+            case 2:
+                // Try the first available voice
+                fallbackVoice = this.voices[0];
+                break;
+            case 3:
+                // Try system default (no voice specified)
+                fallbackVoice = null;
+                break;
+        }
+        
+        if (fallbackVoice) {
+            console.log('Retrying with voice:', fallbackVoice.name);
+            const tempVoice = this.voiceSelect.value;
+            // Temporarily set the fallback voice
+            const fallbackIndex = this.voices.indexOf(fallbackVoice);
+            this.voiceSelect.value = fallbackIndex;
+            
+            // Try speaking with fallback voice
+            await this.playSingleUtterance(text, retryCount);
+            
+            // Restore original voice selection
+            this.voiceSelect.value = tempVoice;
+        } else {
+            // Try with no voice (system default)
+            console.log('Retrying with system default voice');
+            await this.playSingleUtterance(text, retryCount);
+        }
     }
 
     async playChunkedAudio(text, chunkSize) {
