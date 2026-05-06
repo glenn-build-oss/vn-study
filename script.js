@@ -411,12 +411,12 @@ class ChicaApp {
         
         // Set default voice if available
         if (this.voices.length > 0) {
-            // Try to find English voice first
-            const englishVoice = this.voices.find(voice => voice.lang.startsWith('en'));
-            if (englishVoice) {
-                const index = this.voices.indexOf(englishVoice);
+            // Try to find British English female voice first
+            const defaultVoice = this.findReliableVoice();
+            if (defaultVoice) {
+                const index = this.voices.indexOf(defaultVoice);
                 this.voiceSelect.value = index;
-                console.log('Selected English voice:', englishVoice.name);
+                console.log('Selected default voice:', defaultVoice.name, 'Language:', defaultVoice.lang);
             }
         }
     }
@@ -549,7 +549,13 @@ class ChicaApp {
     findReliableVoice() {
         // Try to find a reliable voice in order of preference
         const preferences = [
-            // Prefer local voices over online services
+            // Prefer British English female voices
+            (voice) => !voice.name.includes('Online') && voice.lang === 'en-GB' && voice.name.toLowerCase().includes('female'),
+            // Prefer any British English voice
+            (voice) => !voice.name.includes('Online') && voice.lang === 'en-GB',
+            // Prefer local English female voices
+            (voice) => !voice.name.includes('Online') && voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female'),
+            // Prefer any local English voice
             (voice) => !voice.name.includes('Online') && voice.lang.startsWith('en'),
             // Fallback to any English voice
             (voice) => voice.lang.startsWith('en'),
@@ -560,7 +566,7 @@ class ChicaApp {
         for (const preference of preferences) {
             const voice = this.voices.find(preference);
             if (voice) {
-                console.log('Found reliable voice:', voice.name);
+                console.log('Found reliable voice:', voice.name, 'Language:', voice.lang, 'Gender:', voice.name.toLowerCase().includes('female') ? 'female' : 'unknown');
                 return voice;
             }
         }
@@ -576,15 +582,27 @@ class ChicaApp {
         
         switch (retryCount) {
             case 1:
-                // Try a different English voice
+                // Try a different British English female voice
                 fallbackVoice = this.voices.find(voice => 
-                    voice.lang.startsWith('en') && 
+                    voice.lang === 'en-GB' && 
+                    voice.name.toLowerCase().includes('female') &&
                     voice.name !== this.voiceSelect.options[this.voiceSelect.value]?.text
                 );
+                if (!fallbackVoice) {
+                    // Try any British English voice
+                    fallbackVoice = this.voices.find(voice => 
+                        voice.lang === 'en-GB' &&
+                        voice.name !== this.voiceSelect.options[this.voiceSelect.value]?.text
+                    );
+                }
                 break;
             case 2:
-                // Try the first available voice
-                fallbackVoice = this.voices[0];
+                // Try the first available British voice
+                fallbackVoice = this.voices.find(voice => voice.lang === 'en-GB');
+                if (!fallbackVoice) {
+                    // Try the first available English voice
+                    fallbackVoice = this.voices.find(voice => voice.lang.startsWith('en'));
+                }
                 break;
             case 3:
                 // Try system default (no voice specified)
